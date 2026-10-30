@@ -3,7 +3,7 @@ import 'dart:math';
 
 import 'package:http/http.dart' as http;
 
-/// A single autocomplete prediction from the Places API.
+/// A single autocomplete prediction from Places API (New).
 class PlacePrediction {
   const PlacePrediction({
     required this.placeId,
@@ -13,16 +13,19 @@ class PlacePrediction {
   });
 
   factory PlacePrediction.fromJson(Map<String, dynamic> json) {
+    final Map<String, dynamic> pp =
+        (json['placePrediction'] as Map<String, dynamic>?) ?? <String, dynamic>{};
     final Map<String, dynamic> sf =
-        (json['structured_formatting'] as Map<String, dynamic>?) ??
-            <String, dynamic>{};
+        (pp['structuredFormat'] as Map<String, dynamic>?) ?? <String, dynamic>{};
+    String text(Map<String, dynamic>? m) =>
+        (m?['text'] as String?) ?? '';
+    final String full = text(pp['text'] as Map<String, dynamic>?);
+    final String main = text(sf['mainText'] as Map<String, dynamic>?);
     return PlacePrediction(
-      placeId: json['place_id'] as String? ?? '',
-      mainText: sf['main_text'] as String? ??
-          json['description'] as String? ??
-          '',
-      secondaryText: sf['secondary_text'] as String? ?? '',
-      fullText: json['description'] as String? ?? '',
+      placeId: pp['placeId'] as String? ?? '',
+      mainText: main.isEmpty ? full : main,
+      secondaryText: text(sf['secondaryText'] as Map<String, dynamic>?),
+      fullText: full,
     );
   }
 
@@ -45,20 +48,45 @@ class PlaceDetail {
   final String formattedAddress;
 }
 
-/// Wraps the Places Autocomplete + Place Details APIs.
+/// Wraps Places API (New): Autocomplete + Place Details.
 ///
 /// Uses session tokens so autocomplete + detail calls are billed as one lookup.
+/// [androidPackage]/[androidCertSha1] are sent so an Android-restricted key
+/// still works from plain HTTP calls.
 class PlacesAutocomplete {
-  PlacesAutocomplete({required this.apiKey});
+  PlacesAutocomplete({
+    required this.apiKey,
+    this.androidPackage,
+    this.androidCertSha1,
+  });
 
   final String apiKey;
+  final String? androidPackage;
+  final String? androidCertSha1;
   String _sessionToken = _newToken();
 
+  static final Random _rng = Random();
+
+  /// UUID-v4-shaped token, which is what the New API expects.
   static String _newToken() {
-    final Random r = Random();
-    return List<String>.generate(
-            4, (_) => r.nextInt(0x10000).toRadixString(16).padLeft(4, '0'))
-        .join('-');
+    String hex(int n) => List<String>.generate(
+            n, (_) => _rng.nextInt(16).toRadixString(16))
+        .join();
+    return '${hex(8)}-${hex(4)}-4${hex(3)}-'
+        '${(8 + _rng.nextInt(4)).toRadixString(16)}${hex(3)}-${hex(12)}';
+  }
+
+  Map<String, String> _headers({String? fieldMask}) {
+    final Map<String, String> h = <String, String>{
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': apiKey,
+    };
+    if (fieldMask != null) h['X-Goog-FieldMask'] = fieldMask;
+    if (androidPackage != null) h['X-Android-Package'] = androidPackage!;
+    if (androidCertSha1 != null) {
+      h['X-Android-Cert'] = androidCertSha1!.replaceAll(':', '');
+    }
+    return h;
   }
 
   /// Returns up to 5 predictions for [input], biased toward [lat]/[lng].
@@ -69,36 +97,41 @@ class PlacesAutocomplete {
     double? lng,
   }) async {
     final String q = input.trim();
-    if (q.length < 2) return <PlacePrediction>[];
+    if (q.length < 2 || apiKey.isEmpty) return <PlacePrediction>[];
 
-    final Map<String, String> params = <String, String>{
+    final Map<String, dynamic> body = <String, dynamic>{
       'input': q,
-      'key': apiKey,
-      'sessiontoken': _sessionToken,
-      'language': 'en',
-      'components': 'country:us',
+      'sessionToken': _sessionToken,
+      'languageCode': 'en',
+      'includedRegionCodes': <String>['us'],
     };
     if (lat != null && lng != null) {
-      params['location'] = '$lat,$lng';
-      params['radius'] = '200000'; // 200 km bias — enough for any Michigander
+      body['locationBias'] = <String, dynamic>{
+        'circle': <String, dynamic>{
+          'center': <String, dynamic>{'latitude': lat, 'longitude': lng},
+          'radius': 50000.0, // API max; bias only, not a hard limit
+        },
+      };
     }
 
     try {
-      final Uri uri = Uri.https(
-        'maps.googleapis.com',
-        '/maps/api/place/autocomplete/json',
-        params,
-      );
-      final http.Response resp =
-          await http.get(uri).timeout(const Duration(seconds: 5));
+      final http.Response resp = await http
+          .post(
+            Uri.parse('https://places.googleapis.com/v1/places:autocomplete'),
+            headers: _headers(),
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 5));
       if (resp.statusCode != 200) return <PlacePrediction>[];
-      final Map<String, dynamic> body =
+      final Map<String, dynamic> j =
           json.decode(resp.body) as Map<String, dynamic>;
-      final String status = body['status'] as String? ?? '';
-      if (status != 'OK' && status != 'ZERO_RESULTS') return <PlacePrediction>[];
-      return (body['predictions'] as List<dynamic>)
-          .map((dynamic p) =>
-              PlacePrediction.fromJson(p as Map<String, dynamic>))
+      final List<dynamic> suggestions =
+          (j['suggestions'] as List<dynamic>?) ?? <dynamic>[];
+      return suggestions
+          .whereType<Map<String, dynamic>>()
+          .where((Map<String, dynamic> s) => s.containsKey('placePrediction'))
+          .map(PlacePrediction.fromJson)
+          .where((PlacePrediction p) => p.placeId.isNotEmpty)
           .take(5)
           .toList();
     } catch (_) {
@@ -114,30 +147,22 @@ class PlacesAutocomplete {
 
     try {
       final Uri uri = Uri.https(
-        'maps.googleapis.com',
-        '/maps/api/place/details/json',
-        <String, String>{
-          'place_id': placeId,
-          'key': apiKey,
-          'fields': 'geometry,formatted_address',
-          'sessiontoken': token,
-        },
+        'places.googleapis.com',
+        '/v1/places/$placeId',
+        <String, String>{'sessionToken': token, 'languageCode': 'en'},
       );
-      final http.Response resp =
-          await http.get(uri).timeout(const Duration(seconds: 6));
+      final http.Response resp = await http
+          .get(uri, headers: _headers(fieldMask: 'location,formattedAddress'))
+          .timeout(const Duration(seconds: 6));
       if (resp.statusCode != 200) return null;
-      final Map<String, dynamic> body =
+      final Map<String, dynamic> j =
           json.decode(resp.body) as Map<String, dynamic>;
-      if (body['status'] != 'OK') return null;
-      final Map<String, dynamic> result =
-          body['result'] as Map<String, dynamic>;
-      final Map<String, dynamic> loc =
-          ((result['geometry'] as Map<String, dynamic>)['location'])
-              as Map<String, dynamic>;
+      final Map<String, dynamic>? loc = j['location'] as Map<String, dynamic>?;
+      if (loc == null) return null;
       return PlaceDetail(
-        lat: (loc['lat'] as num).toDouble(),
-        lng: (loc['lng'] as num).toDouble(),
-        formattedAddress: result['formatted_address'] as String? ?? '',
+        lat: (loc['latitude'] as num).toDouble(),
+        lng: (loc['longitude'] as num).toDouble(),
+        formattedAddress: j['formattedAddress'] as String? ?? '',
       );
     } catch (_) {
       return null;

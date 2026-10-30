@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _destFromIntent = false;
 
   // Autocomplete
-  final PlacesAutocomplete _places = PlacesAutocomplete(apiKey: kMapsApiKey);
+  late PlacesAutocomplete _places = PlacesAutocomplete(apiKey: kMapsApiKey);
   List<PlacePrediction> _suggestions = <PlacePrediction>[];
   bool _loadingSuggestions = false;
   Timer? _debounce;
@@ -92,6 +92,11 @@ class _HomeScreenState extends State<HomeScreen> {
       _signingSha1 = sha1;
       _unitKey = unitKey;
       _trailerId = settings.trailerId;
+      _places = PlacesAutocomplete(
+        apiKey: kMapsApiKey,
+        androidPackage: 'cv.towtruck.pablo',
+        androidCertSha1: sha1,
+      );
     });
 
     // Grab a quick location fix to bias autocomplete results.
