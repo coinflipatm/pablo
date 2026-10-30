@@ -26,7 +26,6 @@ class _PinDropScreenState extends State<PinDropScreen> {
   GoogleNavigationViewController? _controller;
   LatLng? _pin;
   String _pinLabel = '';
-  bool _reverseGeocoding = false;
 
   static const LatLng _defaultCenter = LatLng(43.0, -83.7); // Genesee County
 
@@ -126,15 +125,6 @@ class _PinDropScreenState extends State<PinDropScreen> {
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600),
                                   ),
-                                  if (_reverseGeocoding) ...<Widget>[
-                                    const SizedBox(width: 8),
-                                    const SizedBox(
-                                      width: 12,
-                                      height: 12,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 1.5),
-                                    ),
-                                  ],
                                 ],
                               ),
                               if (_pinLabel.isNotEmpty) ...<Widget>[
@@ -210,7 +200,6 @@ class _PinDropScreenState extends State<PinDropScreen> {
     setState(() {
       _pin = pos;
       _pinLabel = '';
-      _reverseGeocoding = false;
     });
   }
 
