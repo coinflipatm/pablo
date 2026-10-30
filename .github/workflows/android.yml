@@ -43,7 +43,13 @@ jobs:
           # Tolerate stray spaces/newlines from pasting into the secrets UI.
           KEYSTORE_PASSWORD="$(printf '%s' "$KEYSTORE_PASSWORD" | tr -d '[:space:]')"
           if ! keytool -list -keystore "$KEYSTORE_ABS" -storepass "$KEYSTORE_PASSWORD" -alias pablo >/dev/null 2>&1; then
-            echo "::error title=Signing::KEYSTORE_PASSWORD does not open android/keys/pablo.jks. Secret length after trimming: ${#KEYSTORE_PASSWORD} (expected 24)."
+            FP=$(printf '%s' "$KEYSTORE_PASSWORD" | sha256sum | cut -c1-16)
+            case "$FP" in
+              550e23324291858d) WHICH="secret IS the correct password, so the keystore itself is unreadable on this JDK" ;;
+              a6b6175130b58123) WHICH="secret is still the OLD wrong password; the edit did not save" ;;
+              *) WHICH="secret matches neither known password (typo?)" ;;
+            esac
+            echo "::error title=Signing::KEYSTORE_PASSWORD does not open the keystore: $WHICH. JDK: $(java -version 2>&1 | head -1)"
             exit 1
           fi
           {
