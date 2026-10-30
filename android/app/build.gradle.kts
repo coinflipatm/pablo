@@ -59,8 +59,8 @@ android {
     }
 
     signingConfigs {
-        if (hasReleaseKey) {
-            create("release") {
+        create("release") {
+            if (hasReleaseKey) {
                 storeFile = file(keyProps["storeFile"] as String)
                 storePassword = keyProps["storePassword"] as String
                 keyAlias = keyProps["keyAlias"] as String
@@ -71,11 +71,7 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (hasReleaseKey) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
+            signingConfig = signingConfigs.getByName(if (hasReleaseKey) "release" else "debug")
         }
     }
 }
