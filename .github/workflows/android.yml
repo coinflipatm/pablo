@@ -25,11 +25,8 @@ jobs:
       - name: Install Flutter ${{ env.FLUTTER_VERSION }}
         run: |
           FLUTTER_DIR="$HOME/flutter"
-          curl -fsSL \
-            "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz" \
-            -o /tmp/flutter.tar.xz
-          mkdir -p "$FLUTTER_DIR"
-          tar -xJf /tmp/flutter.tar.xz -C "$HOME"
+          git clone --depth 1 --branch "$FLUTTER_VERSION" \
+            https://github.com/flutter/flutter.git "$FLUTTER_DIR"
           echo "$FLUTTER_DIR/bin" >> "$GITHUB_PATH"
           # Disable analytics and first-run prompts
           "$FLUTTER_DIR/bin/flutter" config --no-analytics
