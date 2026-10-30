@@ -59,19 +59,23 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            if (hasReleaseKey) {
-                storeFile = file(keyProps["storeFile"] as String)
-                storePassword = keyProps["storePassword"] as String
-                keyAlias = keyProps["keyAlias"] as String
-                keyPassword = keyProps["keyPassword"] as String
+        if (hasReleaseKey) {
+            create("release") {
+                storeFile = file(keyProps.getProperty("storeFile"))
+                storePassword = keyProps.getProperty("storePassword")
+                keyAlias = keyProps.getProperty("keyAlias")
+                keyPassword = keyProps.getProperty("keyPassword")
             }
         }
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName(if (hasReleaseKey) "release" else "debug")
+            signingConfig = if (hasReleaseKey) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }
