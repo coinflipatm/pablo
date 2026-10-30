@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_navigation_flutter/google_navigation_flutter.dart';
 
 import '../destination.dart';
@@ -30,8 +31,16 @@ class NavigateScreen extends StatefulWidget {
 }
 
 class _NavigateScreenState extends State<NavigateScreen> {
+  /// Talks to MainActivity: we say when a route is live, it says when the
+  /// app has shrunk into (or grown out of) the picture-in-picture window.
+  static const MethodChannel _pip = MethodChannel('cv.towtruck.pablo/pip');
+
   StreamSubscription<RoadSnappedLocationUpdatedEvent>? _locationSub;
+  StreamSubscription<NavInfoEvent>? _navInfoSub;
+  final ValueNotifier<NavInfo?> _navInfo = ValueNotifier<NavInfo?>(null);
   Timer? _locationFallback;
+  GoogleNavigationViewController? _controller;
+  bool _inPip = false;
 
   bool _sessionInitialized = false;
   bool _settingDestinations = false;
@@ -42,11 +51,16 @@ class _NavigateScreenState extends State<NavigateScreen> {
   @override
   void initState() {
     super.initState();
+    _pip.setMethodCallHandler(_onPipCall);
     _start();
   }
 
   @override
   void dispose() {
+    _setNavigating(false);
+    _pip.setMethodCallHandler(null);
+    _navInfoSub?.cancel();
+    _navInfo.dispose();
     _locationFallback?.cancel();
     _locationSub?.cancel();
     if (_sessionInitialized) {
@@ -117,6 +131,11 @@ class _NavigateScreenState extends State<NavigateScreen> {
         await GoogleMapsNavigator.startGuidance();
         await _locationSub?.cancel();
         _locationSub = null;
+        _navInfoSub ??= GoogleMapsNavigator.setNavInfoListener(
+          (NavInfoEvent e) => _navInfo.value = e.navInfo,
+          numNextStepsToPreview: 0,
+        );
+        _setNavigating(true);
         if (mounted) {
           setState(() {
             _guidanceRunning = true;
@@ -142,10 +161,44 @@ class _NavigateScreenState extends State<NavigateScreen> {
   }
 
   Future<void> _onViewCreated(GoogleNavigationViewController controller) async {
+    _controller = controller;
     await controller.setMyLocationEnabled(true);
   }
 
+  void _setNavigating(bool on) {
+    _pip.invokeMethod<void>('setNavigating', on).catchError((Object _) {});
+  }
+
+  Future<void> _onPipCall(MethodCall call) async {
+    if (call.method != 'pipChanged') return;
+    final bool pip = call.arguments == true;
+    if (!mounted) return;
+    setState(() => _inPip = pip);
+    await _applyPipChrome(pip);
+  }
+
+  /// In the mini window Google's big header/footer and buttons would cover the
+  /// whole map, so hide them and show our one-line turn strip instead.
+  Future<void> _applyPipChrome(bool pip) async {
+    final GoogleNavigationViewController? c = _controller;
+    if (c == null) return;
+    final List<Future<void> Function()> steps = <Future<void> Function()>[
+      () => c.setNavigationHeaderEnabled(!pip),
+      () => c.setNavigationFooterEnabled(!pip),
+      () => c.setRecenterButtonEnabled(!pip),
+      () => c.setReportIncidentButtonEnabled(!pip),
+      () => c.settings.setCompassEnabled(!pip),
+      if (pip) () => c.followMyLocation(CameraPerspective.tilted),
+    ];
+    for (final Future<void> Function() step in steps) {
+      try {
+        await step();
+      } catch (_) {}
+    }
+  }
+
   Future<void> _stopAndLeave() async {
+    _setNavigating(false);
     try {
       if (_guidanceRunning) await GoogleMapsNavigator.stopGuidance();
       await GoogleMapsNavigator.clearDestinations();
@@ -173,6 +226,7 @@ class _NavigateScreenState extends State<NavigateScreen> {
       child: Scaffold(
         body: Column(
           children: <Widget>[
+            if (!_inPip) ...<Widget>[
             Material(
               color: theme.appBarTheme.backgroundColor,
               child: SafeArea(
@@ -250,12 +304,24 @@ class _NavigateScreenState extends State<NavigateScreen> {
                   ],
                 ),
               ),
+            ],
             Expanded(
-              child: GoogleMapsNavigationView(
-                onViewCreated: _onViewCreated,
-                initialNavigationUIEnabledPreference: NavigationUIEnabledPreference.automatic,
+              key: const ValueKey<String>('map'),
+              // SafeArea keeps Google's bottom bar above the phone's
+              // back/home buttons instead of underneath them.
+              child: SafeArea(
+                top: false,
+                child: GoogleMapsNavigationView(
+                  onViewCreated: _onViewCreated,
+                  initialNavigationUIEnabledPreference: NavigationUIEnabledPreference.automatic,
+                ),
               ),
             ),
+            if (_inPip)
+              ValueListenableBuilder<NavInfo?>(
+                valueListenable: _navInfo,
+                builder: (BuildContext context, NavInfo? info, Widget? _) => _PipStrip(info: info),
+              ),
           ],
         ),
       ),
@@ -288,5 +354,84 @@ class _Banner extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Next-turn strip shown under the map in the picture-in-picture window.
+class _PipStrip extends StatelessWidget {
+  const _PipStrip({required this.info});
+  final NavInfo? info;
+
+  @override
+  Widget build(BuildContext context) {
+    final StepInfo? step = info?.currentStep;
+    final int? meters = info?.distanceToCurrentStepMeters;
+    final int? secs = info?.timeToFinalDestinationSeconds;
+    final String? exit = step?.exitNumber;
+    final String road = (exit != null && exit.isNotEmpty)
+        ? 'Exit $exit'
+        : (step?.simpleRoadName ?? step?.fullRoadName ?? '');
+    final String eta = secs == null
+        ? ''
+        : TimeOfDay.fromDateTime(DateTime.now().add(Duration(seconds: secs))).format(context);
+    final String sub = <String>[
+      if (meters != null) _distance(meters),
+      if (eta.isNotEmpty) eta,
+    ].join(' · ');
+
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFF0B5E5A),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      child: Row(
+        children: <Widget>[
+          Icon(_maneuverIcon(step?.maneuver), color: Colors.white, size: 30),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  road.isEmpty ? sub : road,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700),
+                ),
+                if (road.isNotEmpty && sub.isNotEmpty)
+                  Text(
+                    sub,
+                    maxLines: 1,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _distance(int meters) {
+    final double feet = meters * 3.28084;
+    if (feet < 1000) return '${(feet / 50).round() * 50} ft';
+    return Units.miles(meters);
+  }
+
+  static IconData _maneuverIcon(Maneuver? m) {
+    if (m == null) return Icons.navigation;
+    final String n = m.name;
+    final bool left = n.contains('Left') || n.contains('Counterclockwise');
+    if (n.startsWith('destination')) return Icons.flag;
+    if (n.contains('UTurn')) return left ? Icons.u_turn_left : Icons.u_turn_right;
+    if (n.startsWith('roundabout')) return left ? Icons.roundabout_left : Icons.roundabout_right;
+    if (n.startsWith('merge')) return Icons.merge;
+    if (n.startsWith('fork')) return left ? Icons.fork_left : Icons.fork_right;
+    if (n.startsWith('offRamp') || n.startsWith('onRamp')) return left ? Icons.ramp_left : Icons.ramp_right;
+    if (n.contains('Sharp')) return left ? Icons.turn_sharp_left : Icons.turn_sharp_right;
+    if (n.contains('Slight') || n.contains('Keep')) return left ? Icons.turn_slight_left : Icons.turn_slight_right;
+    if (n.contains('Left')) return Icons.turn_left;
+    if (n.contains('Right')) return Icons.turn_right;
+    return Icons.straight;
   }
 }
