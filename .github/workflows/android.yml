@@ -18,14 +18,13 @@ jobs:
     timeout-minutes: 40
     env:
       HAS_SIGNING_KEY: ${{ secrets.KEYSTORE_PASSWORD != '' }}
-      FLUTTER_VERSION: "3.47.8"
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Flutter ${{ env.FLUTTER_VERSION }}
+      - name: Install Flutter (stable)
         run: |
           FLUTTER_DIR="$HOME/flutter"
-          git clone --depth 1 --branch "$FLUTTER_VERSION" \
+          git clone --depth 1 --branch stable \
             https://github.com/flutter/flutter.git "$FLUTTER_DIR"
           echo "$FLUTTER_DIR/bin" >> "$GITHUB_PATH"
           # Disable analytics and first-run prompts
