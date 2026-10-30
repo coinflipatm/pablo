@@ -12,6 +12,7 @@ import '../profiles.dart';
 import '../routes_api.dart';
 import '../settings.dart';
 import 'navigate_screen.dart';
+import 'pin_drop_screen.dart';
 import 'units_screen.dart';
 
 const String kMapsApiKey = String.fromEnvironment('MAPS_API_KEY');
@@ -259,6 +260,29 @@ class _HomeScreenState extends State<HomeScreen> {
     _checkClipboard();
   }
 
+  Future<void> _openPinDrop() async {
+    _searchFocus.unfocus();
+    final Destination? dest = await Navigator.of(context).push<Destination>(
+      MaterialPageRoute<Destination>(
+        builder: (_) => PinDropScreen(
+          initialLat: _currentLat,
+          initialLng: _currentLng,
+        ),
+      ),
+    );
+    if (dest == null || !mounted) return;
+    setState(() {
+      _destination = dest;
+      _destCtrl.text = dest.label;
+      _destFromIntent = false;
+      _suggestions = <PlacePrediction>[];
+      _error = null;
+    });
+    if (_settings?.autoRoute ?? true) {
+      await _routeAndGo();
+    }
+  }
+
   // ─── Unit / trailer ────────────────────────────────────────────────────────
 
   Combination? get _combination {
@@ -485,7 +509,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                       onPressed: _clearSearch,
                                     )
-                                  : null,
+                                  : IconButton(
+                                      tooltip: 'Drop a pin on the map',
+                                      icon: Icon(
+                                        Icons.add_location_alt_outlined,
+                                        color: theme.colorScheme.onSurface
+                                            .withValues(alpha: 0.5),
+                                      ),
+                                      onPressed: _openPinDrop,
+                                    ),
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 16),
                               filled: true,

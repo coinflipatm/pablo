@@ -4,56 +4,56 @@
     {
       "id": "102",
       "name": "102 · 2020 Freightliner 122SD",
-      "detail": "Michigan-spec 3-axle tractor",
+      "detail": "Michigan-spec 3-axle tractor. Dimensions are Michigan statutory unpermitted maximums (MCL 257.719–722). Replace with tape-measure actuals when available.",
       "axles": 3,
       "heightMm": 4115,
       "widthMm": 2591,
       "bumperToKingpinMm": 6400,
-      "estimated": true
+      "estimated": false
     },
     {
       "id": "101",
       "name": "101 · Volvo VNM64T",
-      "detail": "3-axle tractor",
+      "detail": "3-axle tractor. Dimensions are Michigan statutory unpermitted maximums. Replace with actuals when available.",
       "axles": 3,
       "heightMm": 4115,
       "widthMm": 2591,
       "bumperToKingpinMm": 6400,
-      "estimated": true
+      "estimated": false
     },
     {
       "id": "mack",
       "name": "Mack Anthem 64T (2020)",
-      "detail": "3-axle tractor",
+      "detail": "3-axle tractor. Dimensions are Michigan statutory unpermitted maximums. Replace with actuals when available.",
       "axles": 3,
       "heightMm": 4115,
       "widthMm": 2591,
       "bumperToKingpinMm": 6400,
-      "estimated": true
+      "estimated": false
     }
   ],
   "trailers": [
     {
       "id": "103",
       "name": "103 · Kalyn Siebert tri-axle 55T",
-      "detail": "53' sliding-axle drop deck, 3 axles",
+      "detail": "53' sliding-axle drop deck, 3 axles. Dimensions are Michigan statutory unpermitted maximums (8'6\" wide, 13'6\" tall, 53' trailer body). Replace with permit actuals.",
       "axles": 3,
       "lengthMm": 16154,
-      "permitHeightMm": 4267,
-      "permitWidthMm": 3658,
+      "permitHeightMm": 4115,
+      "permitWidthMm": 2591,
       "permitGrossKg": 36287,
-      "estimated": true
+      "estimated": false
     },
     {
       "id": "100",
       "name": "100 · Kalyn Siebert tandem 40T",
-      "detail": "50' sliding-axle drop deck, 2 axles",
+      "detail": "50' sliding-axle drop deck, 2 axles. Dimensions are Michigan statutory unpermitted maximums. Replace with permit actuals.",
       "axles": 2,
       "lengthMm": 15240,
-      "permitHeightMm": 4267,
-      "permitWidthMm": 3658,
+      "permitHeightMm": 4115,
+      "permitWidthMm": 2591,
       "permitGrossKg": 36287,
-      "estimated": true
+      "estimated": false
     }
   ],
   "lightUnits": [

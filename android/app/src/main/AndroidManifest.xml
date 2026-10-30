@@ -30,6 +30,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Register Pablo as a maps/navigation app so Android offers it
+                 in the "Open with" chooser and "Default apps > Navigation app". -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.APP_MAPS" />
+            </intent-filter>
+
             <!-- Standard Android navigation hand-off: geo:lat,lng?q=... -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
