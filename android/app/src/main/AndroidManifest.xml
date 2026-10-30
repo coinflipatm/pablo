@@ -86,6 +86,22 @@
             </intent-filter>
         </activity>
 
+        <!-- Floats an OPEN IN PABLO button over Towbook's "Navigate to location"
+             box, since Towbook hard-codes Google Maps. User enables it under
+             Settings > Accessibility > Installed apps. -->
+        <service
+            android:name="cv.towtruck.pablo.TowbookWatcherService"
+            android:exported="true"
+            android:label="Pablo - Towbook button"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/towbook_accessibility" />
+        </service>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="towbook_watcher_description">When Towbook shows its "Navigate to location" box, Pablo reads the destination address and puts an OPEN IN PABLO button on screen so the call opens in Pablo instead of Google Maps. Pablo only acts on that one Towbook box; nothing is stored or sent anywhere.</string>
+</resources>
