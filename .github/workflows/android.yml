@@ -40,15 +40,17 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
           KEYSTORE_ABS="$(pwd)/android/keys/pablo.jks"
+          if ! keytool -list -keystore "$KEYSTORE_ABS" -storepass "$KEYSTORE_PASSWORD" -alias pablo >/dev/null 2>&1; then
+            echo "::error title=Signing::KEYSTORE_PASSWORD secret does not open android/keys/pablo.jks (wrong password or alias)."
+            exit 1
+          fi
           {
             echo "storeFile=$KEYSTORE_ABS"
             echo "storePassword=$KEYSTORE_PASSWORD"
             echo "keyAlias=pablo"
             echo "keyPassword=$KEYSTORE_PASSWORD"
           } > android/key.properties
-          echo "key.properties written:"
-          cat android/key.properties
-          echo "Keystore exists: $(test -f "$KEYSTORE_ABS" && echo yes || echo NO)"
+          echo "Release signing configured; keystore password verified."
 
       - name: Dependencies
         run: flutter pub get
@@ -60,13 +62,14 @@ jobs:
         env:
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
         run: |
-          flutter build apk --release \
+          set -o pipefail
+          if ! flutter build apk --release \
             --build-number=${{ github.run_number }} \
-            --dart-define=MAPS_API_KEY=${MAPS_API_KEY} 2>&1; STATUS=$?
-          if [ $STATUS -ne 0 ]; then
-            echo "=== Gradle build output ==="
-            find . -name "*.txt" -path "*/build/outputs/*" -exec cat {} \; 2>/dev/null || true
-            exit $STATUS
+            --dart-define=MAPS_API_KEY=${MAPS_API_KEY} 2>&1 | tee build.log; then
+            # Surface the failure as an annotation so it is readable via the API.
+            MSG=$(grep -E -A 12 "What went wrong|Error:|error:|FAILURE" build.log | head -60 | sed -e 's/%/%25/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')
+            echo "::error title=Build APK failed::${MSG:-no matching error lines; see full log}"
+            exit 1
           fi
 
       - name: Name the APK
