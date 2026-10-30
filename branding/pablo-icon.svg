@@ -1,0 +1,29 @@
+<!-- Pablo app icon: a P built from a highway (stem = your road, bowl = on-ramp loop), "you are here" arrow. Full-bleed; platforms apply their own mask. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="72 72 288 288">
+  <defs>
+    <linearGradient id="abg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#FDC93B"/><stop offset="0.55" stop-color="#F59E0B"/><stop offset="1" stop-color="#E06C09"/>
+    </linearGradient>
+    <radialGradient id="aglow" cx="0.28" cy="0.2" r="0.6">
+      <stop offset="0" stop-color="#FFE7A0" stop-opacity="0.55"/><stop offset="1" stop-color="#FFE7A0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="432" height="432" fill="url(#abg)"/>
+  <rect width="432" height="432" fill="url(#aglow)"/>
+  <defs>
+    <linearGradient id="aasphalt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#20242C"/><stop offset="1" stop-color="#121519"/>
+    </linearGradient>
+    <filter id="ashadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#6B3200" flood-opacity="0.38"/>
+    </filter>
+    <filter id="aashadow" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <g filter="url(#ashadow)">
+    <path d="M163 480 V161 Q163 127 197 127 H213 A64 64 0 0 1 213 255 H163" fill="none" stroke="url(#aasphalt)" stroke-width="62" stroke-linejoin="round"/>
+  </g>
+  <path d="M163 480 V161 Q163 127 197 127 H213 A64 64 0 0 1 213 255 H198" fill="none" stroke="#FCD34D" stroke-width="8" stroke-dasharray="18 14"/>
+  <path transform="translate(163 292)" d="M0 -23 L18 20 L0 10 L-18 20 Z" fill="#FFFFFF" stroke="#FFFFFF"
+      stroke-width="5" stroke-linejoin="round" filter="url(#aashadow)"/></svg>

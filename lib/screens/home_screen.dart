@@ -396,23 +396,13 @@ class _HomeScreenState extends State<HomeScreen> {
         titleSpacing: 16,
         title: Row(
           children: <Widget>[
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Center(
-                child: Text(
-                  'P',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 20,
-                    height: 1,
-                  ),
-                ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                'assets/brand/pablo_icon.png',
+                width: 34,
+                height: 34,
+                filterQuality: FilterQuality.medium,
               ),
             ),
             const SizedBox(width: 10),
