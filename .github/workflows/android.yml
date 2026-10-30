@@ -16,6 +16,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    env:
+      HAS_SIGNING_KEY: ${{ secrets.KEYSTORE_PASSWORD != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -32,21 +34,18 @@ jobs:
       - name: Flutter version
         run: flutter --version
 
-      - name: Restore release signing key
-        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+      - name: Release signing
+        if: env.HAS_SIGNING_KEY == 'true'
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload.jks
           {
-            echo "storeFile=upload.jks"
+            echo "storeFile=../keys/pablo.jks"
             echo "storePassword=$KEYSTORE_PASSWORD"
-            echo "keyAlias=$KEY_ALIAS"
-            echo "keyPassword=$KEY_PASSWORD"
+            echo "keyAlias=pablo"
+            echo "keyPassword=$KEYSTORE_PASSWORD"
           } > android/key.properties
+          echo "Release signing configured."
 
       - name: Dependencies
         run: flutter pub get
@@ -79,4 +78,5 @@ jobs:
           files: pablo-*.apk
           body: |
             Install on Android: download the .apk below, open it, allow installs from this source.
+            Signed: ${{ env.HAS_SIGNING_KEY == 'true' && 'release key' || 'DEBUG key (set KEYSTORE_PASSWORD secret)' }}
             Commit: ${{ github.sha }}

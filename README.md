@@ -32,14 +32,12 @@ Google's own turn-by-turn inside the app. Reroutes keep the truck profile.
 | Secret | Value |
 | --- | --- |
 | `MAPS_API_KEY` | the API key above |
-| `KEYSTORE_BASE64` | base64 of the signing keystore (`base64 -w0 pablo.jks`) |
-| `KEYSTORE_PASSWORD` | keystore password |
-| `KEY_ALIAS` | key alias |
-| `KEY_PASSWORD` | key password |
+| `KEYSTORE_PASSWORD` | password for `android/keys/pablo.jks` (alias `pablo`, same password for the key) |
 
-Without the keystore secrets the APK is debug-signed, which works for a first
-install but every later build will refuse to install over it. Set them before
-the second build.
+The keystore itself is committed, since this repo is private. Without
+`KEYSTORE_PASSWORD` the APK is debug-signed, which works for a first install
+but every later build will refuse to install over it. Set it before the
+second build. If the repo ever goes public, move the keystore out first.
 
 ### Install on a phone
 

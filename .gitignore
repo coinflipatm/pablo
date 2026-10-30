@@ -24,6 +24,7 @@ build/
 **/android/captures/
 
 # Secrets
-*.jks
 *.keystore
 .env
+# The release keystore is committed on purpose (private repo); its password is a GitHub secret.
+!android/keys/pablo.jks
