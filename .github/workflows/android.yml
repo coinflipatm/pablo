@@ -23,7 +23,7 @@ jobs:
 
       - uses: actions/setup-java@v6
         with:
-          distribution: temurin
+          distribution: zulu
           java-version: "21"
 
       - uses: subosito/flutter-action@v2
