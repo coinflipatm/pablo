@@ -1,0 +1,4 @@
+{
+  "_readme": "Local-knowledge hazards Google does not know about. Each entry: id, type (low-bridge | no-truck | weight-limit | width-restrict | construction | frost), note, lat, lng, radiusM. Pablo warns when a computed route passes within radiusM of a hazard. Shipped empty; dispatch pins move here (then to a shared store) as they are collected.",
+  "hazards": []
+}

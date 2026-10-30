@@ -1,0 +1,29 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+*.iml
+*.ipr
+*.iws
+.idea/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+
+# Android
+**/android/.gradle
+**/android/local.properties
+**/android/key.properties
+**/android/app/upload.jks
+**/android/gradlew
+**/android/gradlew.bat
+**/android/gradle-wrapper.jar
+**/android/**/GeneratedPluginRegistrant.java
+**/android/captures/
+
+# Secrets
+*.jks
+*.keystore
+.env

@@ -1,0 +1,74 @@
+{
+  "_readme": "Default fleet profiles. All dimensions in millimeters, weights in kilograms. Rows marked estimated=true are placeholders to be corrected against the MDOT annual permit and a tape measure. Edits made in the app (Units screen) override these without a rebuild.",
+  "tractors": [
+    {
+      "id": "102",
+      "name": "102 · 2020 Freightliner 122SD",
+      "detail": "Michigan-spec 3-axle tractor",
+      "axles": 3,
+      "heightMm": 4115,
+      "widthMm": 2591,
+      "bumperToKingpinMm": 6400,
+      "estimated": true
+    },
+    {
+      "id": "101",
+      "name": "101 · Volvo VNM64T",
+      "detail": "3-axle tractor",
+      "axles": 3,
+      "heightMm": 4115,
+      "widthMm": 2591,
+      "bumperToKingpinMm": 6400,
+      "estimated": true
+    },
+    {
+      "id": "mack",
+      "name": "Mack Anthem 64T (2020)",
+      "detail": "3-axle tractor",
+      "axles": 3,
+      "heightMm": 4115,
+      "widthMm": 2591,
+      "bumperToKingpinMm": 6400,
+      "estimated": true
+    }
+  ],
+  "trailers": [
+    {
+      "id": "103",
+      "name": "103 · Kalyn Siebert tri-axle 55T",
+      "detail": "53' sliding-axle drop deck, 3 axles",
+      "axles": 3,
+      "lengthMm": 16154,
+      "permitHeightMm": 4267,
+      "permitWidthMm": 3658,
+      "permitGrossKg": 36287,
+      "estimated": true
+    },
+    {
+      "id": "100",
+      "name": "100 · Kalyn Siebert tandem 40T",
+      "detail": "50' sliding-axle drop deck, 2 axles",
+      "axles": 2,
+      "lengthMm": 15240,
+      "permitHeightMm": 4267,
+      "permitWidthMm": 3658,
+      "permitGrossKg": 36287,
+      "estimated": true
+    }
+  ],
+  "lightUnits": [
+    { "id": "4",  "name": "4 · F-450 wheel lift" },
+    { "id": "9",  "name": "9 · F-450 wheel lift" },
+    { "id": "13", "name": "13 · F-450 wheel lift" },
+    { "id": "17", "name": "17 · Flatbed" },
+    { "id": "18", "name": "18 · Flatbed" },
+    { "id": "21", "name": "21 · Flatbed" },
+    { "id": "22", "name": "22 · Flatbed" },
+    { "id": "23", "name": "23 · Flatbed" },
+    { "id": "25", "name": "25 · Flatbed" },
+    { "id": "26", "name": "26 · Flatbed" },
+    { "id": "27", "name": "27 · Flatbed" },
+    { "id": "67", "name": "67 · Flatbed" },
+    { "id": "96", "name": "96 · Clifford (wrecker)" }
+  ]
+}

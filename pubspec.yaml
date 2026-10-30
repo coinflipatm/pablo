@@ -1,0 +1,27 @@
+name: pablo
+description: Truck-aware navigation for heavy haul. Routes each unit by its real dimensions, then hands the route to Google's own turn-by-turn.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.8.0
+  flutter: ">=3.44.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  google_navigation_flutter: ^0.11.2
+  geolocator: ^13.0.1
+  http: ^1.2.0
+  shared_preferences: ^2.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/profiles.json
+    - assets/hazards.json
