@@ -198,12 +198,12 @@ class _PinDropScreenState extends State<PinDropScreen> {
     await c.setNavigationUIEnabled(false);
   }
 
-  /// Drop a pin at the current map center.
+  /// Drop a pin at the current map center (crosshair position).
   Future<void> _onPlacePin() async {
     final GoogleNavigationViewController? c = _controller;
     if (c == null) return;
 
-    // Use the camera target (center of visible map) as the pin.
+    // Use the camera target (centre of visible map) as the pin.
     final CameraPosition cam = await c.getCameraPosition();
     final LatLng pos = cam.target;
 
@@ -212,15 +212,6 @@ class _PinDropScreenState extends State<PinDropScreen> {
       _pinLabel = '';
       _reverseGeocoding = false;
     });
-
-    // Add a marker.
-    await c.clearMarkers();
-    await c.addMarkers(<MarkerOptions>[
-      MarkerOptions(
-        position: pos,
-        infoWindow: const InfoWindow(title: 'Destination'),
-      ),
-    ]);
   }
 
   void _onConfirm() {
