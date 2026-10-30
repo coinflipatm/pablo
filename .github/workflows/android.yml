@@ -40,8 +40,10 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
           KEYSTORE_ABS="$(pwd)/android/keys/pablo.jks"
+          # Tolerate stray spaces/newlines from pasting into the secrets UI.
+          KEYSTORE_PASSWORD="$(printf '%s' "$KEYSTORE_PASSWORD" | tr -d '[:space:]')"
           if ! keytool -list -keystore "$KEYSTORE_ABS" -storepass "$KEYSTORE_PASSWORD" -alias pablo >/dev/null 2>&1; then
-            echo "::error title=Signing::KEYSTORE_PASSWORD secret does not open android/keys/pablo.jks (wrong password or alias)."
+            echo "::error title=Signing::KEYSTORE_PASSWORD does not open android/keys/pablo.jks. Secret length after trimming: ${#KEYSTORE_PASSWORD} (expected 24)."
             exit 1
           fi
           {
