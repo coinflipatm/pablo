@@ -39,13 +39,16 @@ jobs:
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
+          KEYSTORE_ABS="$(pwd)/android/keys/pablo.jks"
           {
-            echo "storeFile=../keys/pablo.jks"
+            echo "storeFile=$KEYSTORE_ABS"
             echo "storePassword=$KEYSTORE_PASSWORD"
             echo "keyAlias=pablo"
             echo "keyPassword=$KEYSTORE_PASSWORD"
           } > android/key.properties
-          echo "Release signing configured."
+          echo "key.properties written:"
+          cat android/key.properties
+          echo "Keystore exists: $(test -f "$KEYSTORE_ABS" && echo yes || echo NO)"
 
       - name: Dependencies
         run: flutter pub get
