@@ -18,19 +18,21 @@ jobs:
     timeout-minutes: 40
     env:
       HAS_SIGNING_KEY: ${{ secrets.KEYSTORE_PASSWORD != '' }}
+      FLUTTER_VERSION: "3.47.8"
     steps:
       - uses: actions/checkout@v4
 
-      - name: Java version check
+      - name: Install Flutter ${{ env.FLUTTER_VERSION }}
         run: |
-          java -version
-          echo "JAVA_HOME=$JAVA_HOME"
-          which java
-
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
+          FLUTTER_DIR="$HOME/flutter"
+          curl -fsSL \
+            "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz" \
+            -o /tmp/flutter.tar.xz
+          mkdir -p "$FLUTTER_DIR"
+          tar -xJf /tmp/flutter.tar.xz -C "$HOME"
+          echo "$FLUTTER_DIR/bin" >> "$GITHUB_PATH"
+          # Disable analytics and first-run prompts
+          "$FLUTTER_DIR/bin/flutter" config --no-analytics
 
       - name: Flutter version
         run: flutter --version
