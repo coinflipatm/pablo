@@ -27,7 +27,7 @@ class _PinDropScreenState extends State<PinDropScreen> {
   LatLng? _pin;
   String _pinLabel = '';
 
-  static const LatLng _defaultCenter = LatLng(43.0, -83.7); // Genesee County
+  static const LatLng _defaultCenter = LatLng(latitude: 43.0, longitude: -83.7); // Genesee County
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +48,9 @@ class _PinDropScreenState extends State<PinDropScreen> {
           GoogleMapsNavigationView(
             initialCameraPosition: CameraPosition(
               target: widget.initialLat != null && widget.initialLng != null
-                  ? LatLng(widget.initialLat!, widget.initialLng!)
+                  ? LatLng(
+                      latitude: widget.initialLat!,
+                      longitude: widget.initialLng!)
                   : _defaultCenter,
               zoom: widget.initialLat != null ? 13 : 9,
             ),
