@@ -1,0 +1,9 @@
+addresses: 1092
+geocoded exact/near address: 802
+zip centroids: 2024 (33791)
+zip-centroid fallback: 265; unplaced: 25
+calls with two placed stops: 976; unique stop pairs: 848
+service-area box (41.683, 46.005, -85.796, -82.308): low-clearance 299, posted/closed 951
+routed: 848; routing failures: 0
+low-clearance bridges a call was routed under: 131 (calls affected: 311)
+posted/closed bridges a call was routed over: 59
