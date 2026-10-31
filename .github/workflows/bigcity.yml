@@ -1,0 +1,61 @@
+name: Big City route audit
+# Addresses never sit in this public repo in readable form:
+#  1. this job makes a throwaway keypair and publishes only the public half,
+#  2. the operator pushes the addresses encrypted to that key,
+#  3. results are encrypted to the operator's key (recipient.pub.pem).
+# The throwaway private key dies with the runner.
+on:
+  push:
+    branches: [bridge-data]
+    paths: [tools/bigcity_routes.py, .github/workflows/bigcity.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish throwaway public key
+        run: |
+          git config user.name "pablo-bot"
+          git config user.email "pablo-bot@users.noreply.github.com"
+          mkdir -p work data/bigcity
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out work/runner.key 2>/dev/null
+          openssl pkey -in work/runner.key -pubout -out data/bigcity/runner.pub.pem
+          echo "$GITHUB_RUN_ID" > data/bigcity/runner.id
+          git add data/bigcity/runner.pub.pem data/bigcity/runner.id
+          git commit -m "audit: runner key for run $GITHUB_RUN_ID"
+          git push
+      - name: Wait for encrypted addresses
+        run: |
+          for i in $(seq 1 90); do
+            git pull -q --rebase
+            if [ -f data/bigcity/addresses.for-run ] && [ "$(cat data/bigcity/addresses.for-run)" = "$GITHUB_RUN_ID" ]; then
+              echo "got addresses"; exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::no addresses received"; exit 1
+      - name: Unlock addresses
+        run: |
+          openssl pkeyutl -decrypt -inkey work/runner.key -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 \
+            -in data/bigcity/addresses.key.enc -out work/aes.key
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -pass file:work/aes.key \
+            -in data/bigcity/addresses.csv.enc -out work/addresses.csv
+          wc -l work/addresses.csv
+      - name: Geocode, route, check bridges
+        run: python3 tools/bigcity_routes.py
+      - name: Lock results to operator key and commit
+        if: always()
+        run: |
+          [ -d work/out ] || exit 0
+          tar czf work/results.tgz -C work out
+          openssl rand -out work/res.key 48
+          openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -salt -pass file:work/res.key -in work/results.tgz -out data/bigcity/results.tgz.enc
+          openssl pkeyutl -encrypt -pubin -inkey data/bigcity/recipient.pub.pem -pkeyopt rsa_padding_mode:oaep \
+            -pkeyopt rsa_oaep_md:sha256 -in work/res.key -out data/bigcity/results.key.enc
+          git add data/bigcity/results.tgz.enc data/bigcity/results.key.enc data/bigcity/status.txt
+          git commit -m "audit: Big City results (encrypted) for run $GITHUB_RUN_ID" || true
+          git pull -q --rebase && git push
